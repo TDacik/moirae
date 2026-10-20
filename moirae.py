@@ -59,6 +59,7 @@ def run_lachesis(args):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", action="version", version=VERSION)
+    parser.add_argument("--sv-comp", action="store_true")
     parser.add_argument("--data-model", type=str, default="ILP32")
     parser.add_argument("source_program")
     return parser.parse_args()
