@@ -34,6 +34,7 @@ def run_racerf(args):
     res = run(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
     if res.returncode != 0:
         print(res.stdout)
+        print("RacerF failed")
         exit(res.returncode)
 
     is_race_free = "[racer] Data race " not in str(res.stdout)
@@ -49,6 +50,7 @@ def run_lachesis(args):
     res = run(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
     if res.returncode != 0:
         print(res.stdout)
+        print("Lachesis failed")
         exit(res.returncode)
 
     is_race_free = "[lachesis] Data race " not in str(res.stdout)
@@ -64,7 +66,7 @@ def parse_args():
 
 def run_analysis(args):
     if run_racerf(args):
-        print("Program proved racer-free by RacerF")
+        print("Verification successful: program was proved race-free by RacerF")
         return 0
     elif run_lachesis(args):
         print("No race was observed by Lachesis")
