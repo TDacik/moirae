@@ -7,6 +7,7 @@ from subprocess import run, PIPE, STDOUT
 VERSION = "0.1"
 
 RACERF = "build/racerf/racerf.py"
+LACHESIS = "build/lachesis/lachesis_plugin.sh"
 
 REPORT_FILE = "report.yml"
 
@@ -35,8 +36,19 @@ def run_racerf(args):
     return is_race_free
 
 
-def run_lachesis(program):
-    pass # TODO
+def run_lachesis(args):
+    cmd = [
+        LACHESIS,
+        REPORT_FILE,
+        args.source_program,
+    ]
+    res = run(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+    if res.returncode != 0:
+        print(res.stdout)
+        exit(res.returncode)
+
+    is_race_free = "[lachesis] Data race " not in str(res.stdout)
+    return is_race_free
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -51,8 +63,8 @@ def run_analysis(args):
         print("Program proved racer-free by RacerF")
         return 0
     elif run_lachesis(args):
-        pass
-        # TODO
+        print("No race was observed by Lachesis")
+        return 0
 
     print("Verification inconclusive")
     return 0
