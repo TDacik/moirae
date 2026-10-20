@@ -53,8 +53,8 @@ def run_lachesis(args):
         print("Lachesis failed")
         exit(res.returncode)
 
-    is_race_free = "[lachesis] Data race " not in str(res.stdout)
-    return is_race_free
+    has_free = "[lachesis] Data race " in str(res.stdout)
+    return has_race
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -69,7 +69,7 @@ def run_analysis(args):
         print("Verification successful: program was proved race-free by RacerF")
         return 0
     elif run_lachesis(args):
-        print("No race was observed by Lachesis")
+        print("Data race found by Lachesis")
         return 0
 
     print("Verification inconclusive")
