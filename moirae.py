@@ -4,12 +4,14 @@ import os
 import sys
 import argparse
 
+from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 
 VERSION = "0.1"
 
-RACERF = "build/racerf/racerf.py"
-LACHESIS = "build/lachesis/lachesis_plugin.sh"
+SCRIPT_DIR = Path(__file__).resolve().parent
+RACERF = SCRIPT_DIR / "build/racerf/racerf.py"
+LACHESIS = SCRIPT_DIR / "build/lachesis/lachesis_plugin.sh"
 
 REPORT_FILE = "report.yml"
 
