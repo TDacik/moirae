@@ -11,9 +11,10 @@ VERSION = "0.1"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 RACERF = SCRIPT_DIR / "build/racerf/racerf.py"
-LACHESIS = SCRIPT_DIR / "build/lachesis/lachesis_plugin.sh"
+LACHESIS_COMPILE = SCRIPT_DIR / "lachesis_compile.sh"
+INSTRUMENTED_BIN = SCRIPT_DIR / "instrumented"
 
-REPORT_FILE = "report.yml"
+REPORT_FILE = "racerf_result.yml"
 
 
 def run_racerf(args):
@@ -41,20 +42,41 @@ def run_racerf(args):
     return is_race_free
 
 
-def run_lachesis(args):
+def lachesis_compile(args):
     cmd = [
-        LACHESIS,
+        LACHESIS_COMPILE,
         REPORT_FILE,
         args.source_program,
     ]
     res = run(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
     if res.returncode != 0:
         print(res.stdout)
-        print("Lachesis failed")
+        print("Lachesis failed: compilation")
         exit(res.returncode)
 
-    has_free = "[lachesis] Data race " in str(res.stdout)
+def run_instrumented(args, timeout=None):
+    cmd = [INSTRUMENTED_BIN]
+    res = run(cmd, timeout=timeout, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+    if res.returncode != 0:
+        print(res.stdout)
+        print("Lachesis failed: instrumented binary crashed")
+        exit(res.returncode)
+
+    has_race = "[lachesis] Data race " in str(res.stdout)
     return has_race
+
+
+def run_lachesis(args):
+    limit = None if args.sv_comp else 5
+
+    lachesis_compile()
+
+    i = 0
+    while limit is None or i < limit:
+        print("[moirae] Lachesis iteration: %d", i)
+        run_lachesis_once(args)
+        i += 1
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -78,6 +100,8 @@ def run_analysis(args):
 
 
 def main():
+    if os.path.exists(REPORT_FILE):
+        os.remove(REPORT_FILE)
     args = parse_args()
     exit(run_analysis(args))
 
