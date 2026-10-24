@@ -4,6 +4,7 @@ import os
 import sys
 import argparse
 
+from enum import StrEnum
 from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 
@@ -16,6 +17,10 @@ INSTRUMENTED_BIN = SCRIPT_DIR / "instrumented"
 
 REPORT_FILE = "racerf_result.yml"
 
+class Verdict(StrEnum):
+    NOTHING = "nothing"
+    DATA_RACE = "data race"
+    CRASH = "crash"
 
 def run_racerf(args):
     translation = {"ilp32": "gcc_x86_32", "lp64": "gcc_x86_64"}
@@ -48,7 +53,9 @@ def lachesis_compile(args):
         REPORT_FILE,
         args.source_program,
     ]
+
     res = run(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+
     if res.returncode != 0:
         print(res.stdout)
         print("Lachesis failed: compilation")
@@ -57,25 +64,34 @@ def lachesis_compile(args):
 def run_instrumented(args, timeout=None):
     cmd = [INSTRUMENTED_BIN]
     res = run(cmd, timeout=timeout, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+
     if res.returncode != 0:
-        print(res.stdout)
-        print("Lachesis failed: instrumented binary crashed")
-        exit(res.returncode)
-
-    has_race = "[lachesis] Data race " in str(res.stdout)
-    return has_race
-
+        return Verdict.CRASH, res
+    elif "[lachesis] Data race " in str(res.stdout):
+        return Verdict.DATA_RACE, res
+    else:
+        return Verdict.NOTHING, res
 
 def run_lachesis(args):
-    limit = None if args.sv_comp else 5
+    limit = 1000 if args.sv_comp else 5
 
-    lachesis_compile()
+    lachesis_compile(args)
 
-    i = 0
-    while limit is None or i < limit:
-        print("[moirae] Lachesis iteration: %d", i)
-        run_lachesis_once(args)
+    i = 1
+    while limit is None or i <= limit:
+        print(f"[moirae] Test iteration {i}: ", end="")
+        verdict, res = run_instrumented(args)
+        print(verdict)
+
+        if verdict == Verdict.CRASH:
+            print(res.stdout)
+        elif verdict == Verdict.DATA_RACE:
+            print(res.stdout)
+            return True
+
         i += 1
+
+    return False
 
 
 def parse_args():
