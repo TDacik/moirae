@@ -40,8 +40,7 @@ build_lachesis() {
     (
         cd "$LACHESIS_REPOSITORY" && ./scripts/svcomp/build.sh
     )
-    cp "$LACHESIS_REPOSITORY"/build/llvm-pass/Lachesis.so "$BUILD_DIR_LACHESIS"
-    cp "$LACHESIS_REPOSITORY"/build/src/liblachesis.a "$BUILD_DIR_LACHESIS"
+    cp -r "$LACHESIS_REPOSITORY"/build/* "$BUILD_DIR_LACHESIS"
 }
 
 init
