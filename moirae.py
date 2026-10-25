@@ -21,6 +21,7 @@ class Verdict(StrEnum):
     NOTHING = "nothing"
     DATA_RACE = "data race"
     CRASH = "crash"
+    TIMEOUT = "timeout"
 
 def run_racerf(args):
     translation = {"ilp32": "gcc_x86_32", "lp64": "gcc_x86_64"}
@@ -63,7 +64,11 @@ def lachesis_compile(args):
 
 def run_instrumented(args, timeout=None):
     cmd = [INSTRUMENTED_BIN]
-    res = run(cmd, timeout=timeout, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+
+    try:
+        res = run(cmd, timeout=timeout, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+    except TimeoutExpired:
+        return Verdict.TIMEOUT, None
 
     if res.returncode != 0:
         return Verdict.CRASH, res
@@ -73,14 +78,18 @@ def run_instrumented(args, timeout=None):
         return Verdict.NOTHING, res
 
 def run_lachesis(args):
-    limit = 1000 if args.sv_comp else 5
+    limit = None if args.sv_comp else 5
 
     lachesis_compile(args)
 
     i = 1
+    timeout = 1
     while limit is None or i <= limit:
+        if i % 50 == 0:
+            timeout = 2 * timeout
+
         print(f"[moirae] Test iteration {i}: ", end="")
-        verdict, res = run_instrumented(args)
+        verdict, res = run_instrumented(args, timeout=timeout)
         print(verdict)
 
         if verdict == Verdict.CRASH:
