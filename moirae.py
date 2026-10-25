@@ -13,7 +13,7 @@ VERSION = "0.1"
 SCRIPT_DIR = Path(__file__).resolve().parent
 RACERF = SCRIPT_DIR / "build/racerf/racerf.py"
 LACHESIS_COMPILE = SCRIPT_DIR / "lachesis_compile.sh"
-INSTRUMENTED_BIN = SCRIPT_DIR / "instrumented"
+INSTRUMENTED_BIN = "/tmp/instrumented"
 
 REPORT_FILE = "racerf_result.yml"
 

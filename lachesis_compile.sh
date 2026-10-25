@@ -7,8 +7,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 LACHESIS_BUILD="$SCRIPT_DIR"/build/lachesis
 
 # Cleanup
-rm -f instrumented.o instrumented
+rm -f /tmp/instrumented.o /tmp/instrumented
 
 # Compilation
-clang -fpass-plugin="$LACHESIS_BUILD"/Lachesis.so -g -O0 -c $CODE -o instrumented.o && \
-clang++ instrumented.o "$LACHESIS_BUILD"/liblachesis.a -o "instrumented" || exit $?
+clang -fpass-plugin="$LACHESIS_BUILD"/Lachesis.so -g -O0 -c $CODE -o /tmp/instrumented.o && \
+clang++ /tmp/instrumented.o "$LACHESIS_BUILD"/liblachesis.a -o /tmp/instrumented || exit $?
